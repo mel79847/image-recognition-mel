@@ -1,5 +1,5 @@
 # "org" ensures this Service is used with the correct Serverless Framework Access Key.
-org: upbaws2025
+org: upb2025mel
 # "service" is the name of this project. This will also be added to your AWS resource names.
 service: serverless-image-app
 
@@ -27,7 +27,7 @@ package:
     - .gitignore
     - .serverless/**
 functions:
-  raynerGetSignedUrl:
+  melGetSignedUrl:
     handler: src/handler.getSignedUrl
     events:
       - httpApi:
