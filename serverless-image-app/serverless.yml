@@ -37,13 +37,13 @@ package:
     - .serverless/**
 functions:
   melGetSignedUrl:
-    handler: src/handler.getSignedUrl
+    handler: handler.getSignedUrl
     events:
       - httpApi:
           path: /signed-url
           method: get
   processImage:
-    handler: src/handler.processImage
+    handler: handler.processImage
     events:
       - s3:
           bucket: ${self:provider.environment.BUCKET_NAME}
