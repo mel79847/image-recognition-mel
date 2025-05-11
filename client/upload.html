@@ -1,17 +1,152 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Upload to S3</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #fef6ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .upload-container {
+      background: white;
+      padding: 30px 40px;
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+      text-align: center;
+      width: 350px;
+    }
+
+    h2 {
+      color: #a64ac9;
+      margin-bottom: 25px;
+    }
+
+    .custom-file-input {
+      position: relative;
+      overflow: hidden;
+      display: inline-block;
+      background-color: #ffb3ec;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s;
+      margin-bottom: 10px;
+    }
+
+    .custom-file-input:hover {
+      background-color: #e77bd4;
+    }
+
+    .custom-file-input input[type="file"] {
+      position: absolute;
+      left: 0;
+      top: 0;
+      opacity: 0;
+      cursor: pointer;
+      height: 100%;
+      width: 100%;
+    }
+
+    #file-name {
+      font-size: 13px;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    #preview {
+      width: 100%;
+      max-width: 250px;
+      margin: 10px auto;
+      display: none;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    button {
+      margin-top: 10px;
+      background-color: #a64ac9;
+      color: white;
+      border: none;
+      padding: 10px 22px;
+      font-size: 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #9130b5;
+    }
+
+    .success {
+      margin-top: 15px;
+      color: green;
+    }
+
+    .error {
+      margin-top: 15px;
+      color: red;
+    }
+  </style>
+</head>
 <body>
-  <h2>Upload Image to S3</h2>
-  <input type="file" id="fileInput" />
-  <button onclick="uploadFile()">Upload</button>
+  <div class="upload-container">
+    <h2>Upload Image to S3</h2>
+
+    <label class="custom-file-input">
+      Choose File
+      <input type="file" id="fileInput" accept="image/*" onchange="showFileName()" />
+    </label>
+    <div id="file-name">No file selected</div>
+    <img id="preview" src="#" alt="Image Preview" />
+    <button onclick="uploadFile()">Upload</button>
+    <div id="message"></div>
+  </div>
 
   <script>
+    function showFileName() {
+      const fileInput = document.getElementById('fileInput');
+      const file = fileInput.files[0];
+      const fileName = file?.name || 'No file selected';
+      document.getElementById('file-name').textContent = fileName;
+
+      const preview = document.getElementById('preview');
+      if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          preview.src = e.target.result;
+          preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      } else {
+        preview.src = '';
+        preview.style.display = 'none';
+      }
+    }
+
     async function uploadFile() {
       const file = document.getElementById('fileInput').files[0];
-      if (!file) return alert('Select a file first.');
+      const message = document.getElementById('message');
+      if (!file) return alert('Please select a file first.');
 
       const apiUrl = 'https://ftldpizqdc.execute-api.us-east-1.amazonaws.com/signed-url';
       const res = await fetch(`${apiUrl}?filename=${file.name}&filetype=${file.type}`);
+
+      if (!res.ok) {
+        message.innerHTML = `<p class="error">Failed to get signed URL 😓</p>`;
+        return;
+      }
+
       const { uploadURL } = await res.json();
 
       const uploadRes = await fetch(uploadURL, {
@@ -20,8 +155,11 @@
         body: file
       });
 
-      if (uploadRes.ok) alert('Upload successful!');
-      else alert('Upload failed.');
+      if (uploadRes.ok) {
+        message.innerHTML = `<p class="success">Upload successful! 🎉</p>`;
+      } else {
+        message.innerHTML = `<p class="error">Upload failed 💔</p>`;
+      }
     }
   </script>
 </body>
